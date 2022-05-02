@@ -1,0 +1,9 @@
+<launch>
+	<node pkg="burgerrace" name="line_detector_mission_gui" type="line_detector_mission_gui.py" output="screen"/>
+	<node pkg="burgerrace" name="sign_detector_mission_gui" type="sign_detector_mission_gui.py" output="screen"/>
+	<node pkg="burgerrace" name="lidar_reader_mission" type="lidar_reader_mission.py" output="screen"/>
+	<node pkg="burgerrace" name="mission_handler_gui" type="mission_handler_gui.py" output="screen"/>
+	<node pkg="burgerrace" name="gui_controller" type="gui_controller.py" output="screen"/>
+	<node pkg="burgerrace" name="move_api" type="move_api.py" output="screen"/>
+	<node pkg="burgerrace" name="teleop" type="teleop.py" output="screen"/>
+</launch>
