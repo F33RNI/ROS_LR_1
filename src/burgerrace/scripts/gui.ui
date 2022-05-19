@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>874</width>
-    <height>723</height>
+    <height>708</height>
    </rect>
   </property>
   <property name="font">
@@ -349,27 +349,35 @@
       </item>
       <item row="1" column="1">
        <layout class="QGridLayout" name="gridLayout_2">
-        <item row="5" column="1">
-         <widget class="QLineEdit" name="line_odom_y">
-          <property name="text">
-           <string>0</string>
+        <item row="1" column="1">
+         <widget class="QDoubleSpinBox" name="spinbox_odom_y">
+          <property name="decimals">
+           <number>3</number>
           </property>
-          <property name="readOnly">
-           <bool>true</bool>
+          <property name="minimum">
+           <double>-100.000000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>100.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>0.010000000000000</double>
           </property>
          </widget>
         </item>
-        <item row="0" column="0">
-         <widget class="QLabel" name="label_9">
-          <property name="text">
-           <string>X:</string>
+        <item row="0" column="1">
+         <widget class="QDoubleSpinBox" name="spinbox_odom_x">
+          <property name="decimals">
+           <number>3</number>
           </property>
-         </widget>
-        </item>
-        <item row="1" column="0">
-         <widget class="QLabel" name="label_10">
-          <property name="text">
-           <string>Y:</string>
+          <property name="minimum">
+           <double>-100.000000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>100.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>0.010000000000000</double>
           </property>
          </widget>
         </item>
@@ -380,6 +388,13 @@
           </property>
          </widget>
         </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_10">
+          <property name="text">
+           <string>Y:</string>
+          </property>
+         </widget>
+        </item>
         <item row="3" column="1">
          <widget class="QPushButton" name="btn_odom_clear">
           <property name="text">
@@ -387,81 +402,15 @@
           </property>
          </widget>
         </item>
-        <item row="4" column="0">
-         <widget class="QLabel" name="label_14">
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_9">
           <property name="text">
            <string>X:</string>
           </property>
          </widget>
         </item>
-        <item row="5" column="0">
-         <widget class="QLabel" name="label_12">
-          <property name="text">
-           <string>Y:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="4" column="1">
-         <widget class="QLineEdit" name="line_odom_x">
-          <property name="text">
-           <string>0</string>
-          </property>
-          <property name="readOnly">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="6" column="1">
-         <widget class="QLineEdit" name="line_odom_yaw">
-          <property name="text">
-           <string>0</string>
-          </property>
-          <property name="readOnly">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="6" column="0">
-         <widget class="QLabel" name="label_13">
-          <property name="text">
-           <string>Yaw:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1">
-         <widget class="QDoubleSpinBox" name="spinbox_odom_start_x">
-          <property name="decimals">
-           <number>3</number>
-          </property>
-          <property name="minimum">
-           <double>-100.000000000000000</double>
-          </property>
-          <property name="maximum">
-           <double>100.000000000000000</double>
-          </property>
-          <property name="singleStep">
-           <double>0.010000000000000</double>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="1">
-         <widget class="QDoubleSpinBox" name="spinbox_odom_start_y">
-          <property name="decimals">
-           <number>3</number>
-          </property>
-          <property name="minimum">
-           <double>-100.000000000000000</double>
-          </property>
-          <property name="maximum">
-           <double>100.000000000000000</double>
-          </property>
-          <property name="singleStep">
-           <double>0.010000000000000</double>
-          </property>
-         </widget>
-        </item>
         <item row="2" column="1">
-         <widget class="QDoubleSpinBox" name="spinbox_odom_start_yaw">
+         <widget class="QDoubleSpinBox" name="spinbox_odom_yaw">
           <property name="decimals">
            <number>3</number>
           </property>
@@ -473,6 +422,13 @@
           </property>
           <property name="singleStep">
            <double>5.000000000000000</double>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QPushButton" name="btn_odom_enable">
+          <property name="text">
+           <string>Enable</string>
           </property>
          </widget>
         </item>

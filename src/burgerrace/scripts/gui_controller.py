@@ -59,15 +59,19 @@ IMAGE_TYPE_FRONT_SIGN = 1
 IMAGE_TYPE_TOP_RAW = 2
 IMAGE_TYPE_TOP_LINE = 3
 
+ENCODERS_TYPE_X = 0
+ENCODERS_TYPE_Y = 1
+ENCODERS_TYPE_YAW = 2
+
 
 class Window(QMainWindow):
 	update_logs = QtCore.Signal(str)
 	update_front_image = QtCore.Signal(QPixmap)
 	update_top_image = QtCore.Signal(QPixmap)
 	update_lidar_image = QtCore.Signal(QPixmap)
-	update_odom_x = QtCore.Signal(str)
-	update_odom_y = QtCore.Signal(str)
-	update_odom_yaw = QtCore.Signal(str)
+	update_odom_x = QtCore.Signal(float)
+	update_odom_y = QtCore.Signal(float)
+	update_odom_yaw = QtCore.Signal(float)
 
 	def __init__(self):
 		super(Window, self).__init__()
@@ -80,19 +84,6 @@ class Window(QMainWindow):
 
 		# Is running flag for manual control thread
 		self.manual_control_thread_running = False
-
-		# Variables for storing the absolute position of the robot by odometry
-		self.x = 0
-		self.y = 0
-		self.yaw = 0
-
-		# Variables for storing the relative position of the robot by odometry
-		self.odom_x_tare = 0
-		self.odom_y_tare = 0
-		self.odom_yaw_tare = 0
-
-		# Flag to start odometry initialization 
-		self.is_odom_initialized = False
 
 		# Find GUI directory
 		self_dir = os.path.dirname(os.path.realpath(__file__))
@@ -123,12 +114,22 @@ class Window(QMainWindow):
 		# Debug log
 		rospy.Subscriber('mission_logs', String, self.mission_logs_callback, queue_size=8)
 
-		# Create subscriber for odometry
-		rospy.Subscriber('odom', Odometry, self.odom_callback, queue_size=1)
-
-		# Create publishers
+		# Create publishers for velocities and manual control
 		self.cmd_vel = rospy.Publisher('cmd_vel', Twist, queue_size=1)
 		self.manual_control = rospy.Publisher('manual_control', Bool, queue_size=1)
+
+		# Create subscribers for encoders
+		rospy.Subscriber('position_x', Float64, self.encoders_callback, ENCODERS_TYPE_X, queue_size=1)
+		rospy.Subscriber('position_y', Float64, self.encoders_callback, ENCODERS_TYPE_Y, queue_size=1)
+		rospy.Subscriber('position_yaw', Float64, self.encoders_callback, ENCODERS_TYPE_YAW, queue_size=1)
+
+		# Create publishers for encoders home position
+		self.set_absolute_position_x_publisher = rospy.Publisher('set_absolute_position_x', Float64, queue_size=1)
+		self.set_absolute_position_y_publisher = rospy.Publisher('set_absolute_position_y', Float64, queue_size=1)
+		self.set_absolute_position_yaw_publisher = rospy.Publisher('set_absolute_position_yaw', Float64, queue_size=1)
+
+		# Create publisher for enable encoders
+		self.encoders_enabled_publisher = rospy.Publisher('encoders_enabled', Bool, queue_size=1)
 
 		# Disable autopilot
 		self.manual_control.publish(True)
@@ -142,15 +143,16 @@ class Window(QMainWindow):
 		self.radio_manual.clicked.connect(self.manual_begin)
 		self.radio_apilot.clicked.connect(self.manual_end)
 		self.btn_odom_clear.clicked.connect(self.odom_clear)
+		self.btn_odom_enable.clicked.connect(self.odom_enable)
 
 		# Connect signals
 		self.update_logs.connect(self.debug_log.appendPlainText)
 		self.update_front_image.connect(self.front_camera.setPixmap)
 		self.update_top_image.connect(self.top_camera.setPixmap)
 		self.update_lidar_image.connect(self.lidar_image.setPixmap)
-		self.update_odom_x.connect(self.line_odom_x.setText)
-		self.update_odom_y.connect(self.line_odom_y.setText)
-		self.update_odom_yaw.connect(self.line_odom_yaw.setText)
+		self.update_odom_x.connect(self.spinbox_odom_x.setValue)
+		self.update_odom_y.connect(self.spinbox_odom_y.setValue)
+		self.update_odom_yaw.connect(self.spinbox_odom_yaw.setValue)
 
 		# Switch to manual control
 		self.radio_manual.setChecked(True)
@@ -259,52 +261,52 @@ class Window(QMainWindow):
 		"""
 		self.update_logs.emit(str(data.data))
 
-	def odom_callback(self, data):
+
+	def encoders_callback(self, data, type):
 		"""
-		Displays the relative values of the robot's odometers
+		Updates spinboxes
 		"""
-		pose = data.pose.pose
+		if type == ENCODERS_TYPE_X:
+			self.update_odom_x.emit(round(data.data, 3))
 
-		# Caculate current (absolute) x, y positions and yaw angle of the robot
-		self.x = pose.position.x
-		self.y = pose.position.y
-		_, _, self.yaw = euler_from_quaternion([pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w])
+		elif type == ENCODERS_TYPE_Y:
+			self.update_odom_y.emit(round(data.data, 3))
 
-		# Calculate releative x, y positions and yaw angle
-		x_rel = self.x - float(self.spinbox_odom_start_x.value()) - self.odom_x_tare
-		y_rel = self.y - float(self.spinbox_odom_start_y.value()) - self.odom_y_tare
-		yaw_rel = self.yaw - math.radians(float(self.spinbox_odom_start_yaw.value())) - self.odom_yaw_tare
-
-		# Displaying relative values
-		self.update_odom_x.emit(str(round(x_rel, 3)))
-		self.update_odom_y.emit(str(round(y_rel, 3)))
-		self.update_odom_yaw.emit(str(round(math.degrees(yaw_rel), 3)))
+		elif type == ENCODERS_TYPE_YAW:
+			self.update_odom_yaw.emit(round(math.degrees(data.data), 3))
 
 
 	def odom_clear(self):
 		"""
-		Resets releative position
+		Resets encoders accumulation variables
 		"""
-		# Calculate releative x, y positions and yaw angle
-		x_rel = self.x - float(self.spinbox_odom_start_x.value())
-		y_rel = self.y - float(self.spinbox_odom_start_y.value())
-		yaw_rel = self.yaw - math.radians(float(self.spinbox_odom_start_yaw.value()))
+		# Reset absolute positions
+		self.set_absolute_position_x_publisher.publish(0.)
+		self.set_absolute_position_y_publisher.publish(0.)
+		self.set_absolute_position_yaw_publisher.publish(0.)
 
-		self.odom_x_tare = x_rel
-		self.odom_y_tare = y_rel
-		self.odom_yaw_tare = yaw_rel
 
-		# Displaying relative values
-		self.update_odom_x.emit('0')
-		self.update_odom_y.emit('0')
-		self.update_odom_yaw.emit('0')
+	def odom_enable(self):
+		"""
+		Sends current home position and enables encoders calculation
+		"""
+		# Disable button
+		self.btn_odom_enable.setEnabled(False)
+
+		# Send home position
+		self.set_absolute_position_x_publisher.publish(float(self.spinbox_odom_x.value()))
+		self.set_absolute_position_y_publisher.publish(float(self.spinbox_odom_y.value()))
+		self.set_absolute_position_yaw_publisher.publish(math.radians(float(self.spinbox_odom_yaw.value())))
+
+		# Enable encoders
+		self.encoders_enabled_publisher.publish(True)
 
 
 
 # Main entry point
 if __name__ == '__main__':
 	app = QApplication(sys.argv)
-	app.setStyle('fusion')
+	app.setStyle('Windows')
 	win = Window()
 	win.show()
 	sys.exit(app.exec_())
