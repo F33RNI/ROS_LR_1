@@ -6,4 +6,5 @@
 	<node pkg="burgerrace" name="gui_controller" type="gui_controller.py" output="screen"/>
 	<node pkg="burgerrace" name="move_api" type="move_api.py" output="screen"/>
 	<node pkg="burgerrace" name="teleop" type="teleop.py" output="screen"/>
+	<node pkg="burgerrace" name="encoders_reader" type="encoders_reader.py" output="screen"/>
 </launch>
